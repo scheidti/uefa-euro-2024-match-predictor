@@ -1,4 +1,5 @@
 import requests
+import os
 from dotenv import load_dotenv
 from playwright.sync_api import sync_playwright
 from bs4 import BeautifulSoup
@@ -137,9 +138,36 @@ def get_news_tagesschau(team1, team2):
                 soup = BeautifulSoup(page.content(), "html.parser")
                 news_text = soup.select(".textabsatz")
                 news_text = " ".join([text.text for text in news_text])
-                news_result.append({"url": news_url, "text": news_text, "title": news_titles.pop(0)})
+                news_result.append(
+                    {"url": news_url, "text": news_text, "title": news_titles.pop(0)}
+                )
             except Exception as e:
                 print(e)
+
+    return news_result
+
+
+def get_bing_news(team1, team2):
+    """Scrapes the news of the teams from Bing."""
+    bing_url = "https://api.bing.microsoft.com/v7.0/search"
+    subscription_key = os.environ["BING_KEY_1"]
+    query = f"{team1} {team2} EM 2024"
+    headers = {"Ocp-Apim-Subscription-Key": subscription_key}
+    mkt = "de-DE"
+    params = {"q": query, "mkt": mkt, "textFormat": "Raw", "count": 3}
+    response = requests.get(bing_url, headers=headers, params=params)
+    json = response.json()
+    news_articles = json["news"]["value"]
+    news_result = []
+
+    for article in news_articles:
+        news_result.append(
+            {
+                "url": article["url"],
+                "title": article["name"],
+                "description": article["description"],
+            }
+        )
 
     return news_result
 
@@ -158,3 +186,5 @@ if len(matches) > 0:
     rankings = get_ranking()
     games = get_games_by_teams(games_data_url)
     tagesschau_news = get_news_tagesschau(team1_name, team2_name)
+    bing_news = get_bing_news(team1_name, team2_name)
+    print(bing_news)
