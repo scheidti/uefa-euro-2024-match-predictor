@@ -172,8 +172,71 @@ def get_bing_news(team1, team2):
     return news_result
 
 
+def get_ranking_for_team(team, rankings):
+    """Gets the FIFA world ranking for a specific team."""
+    for rank in rankings:
+        if rank["team"].lower() == team.lower():
+            return rank["rank"]
+
+    return None
+
+
+def get_last_games_string(games):
+    """Gets the last games of the teams as a string."""
+    games_string = ""
+    for game in games:
+        games_string += f"{game['team1']} - {game['team2']}: {game['result']} ({game['date'].strip()})\n"
+
+    return games_string
+
+
+def get_tagesschau_news_string(news):
+    """Gets the news from Tagesschau as a string."""
+    news_string = ""
+    for article in news:
+        news_string += f"Titel: {article['title']}:\nText:{article['text']}\n\n"
+
+    return news_string
+
+
+def get_bing_news_string(news):
+    """Gets the news from Bing as a string."""
+    news_string = ""
+    for article in news:
+        news_string += f"Titel: {article['title']}\nBeschreibung: {article['description']}\nURL: {article['url']}\n\n"
+
+    return news_string
+
+
 matches = get_matches()
 matches = [match for match in matches if not match["matchIsFinished"]]
+rankings = get_ranking()
+
+prompt = """Du bist ein Experte für die Vorhersage der Fussballergebnisse der UEFA Euro 2024.
+Wenn du die Ergebnisse der Spiele korrekt vorhersagst, gewinnst du 500 Euro.
+Du sollst das Ergebnis des folgenden Spiels vorhersagen:
+
+{0}
+
+Das sind die letzen Ergebnisse der Spiele der beiden Teams:
+
+{1}
+
+Folgende News gibt es zu den Teams. Beziehe die News in deine Vorhersage mit ein, falls du die News für relevant hältst:
+
+{2}
+
+Hier hast du weitere News-Titel und eine kurze Beschreibung. Klicke auf den Link, um die vollständige News zu lesen.
+Klicke nur auf den Link und lies die News, wenn du die News für relevant hältst:
+
+{3}
+
+Gib dein Ergebnis in der folgenden Form aus:
+
+Tore Team 1 : Tore Team 2
+
+Viel Erfolg! 🍀
+"""
 
 if len(matches) > 0:
     match = matches[0]
@@ -181,10 +244,20 @@ if len(matches) > 0:
     team2_id = match["team2"]["teamId"]
     team1_name = match["team1"]["teamName"]
     team2_name = match["team2"]["teamName"]
+    team1_rank = get_ranking_for_team(team1_name, rankings)
+    team2_rank = get_ranking_for_team(team2_name, rankings)
     games_data_url = f"https://www.fussballdaten.de/vereine/{translate_umlauts(team1_name)}/{translate_umlauts(team2_name)}/spiele/"
 
-    rankings = get_ranking()
     games = get_games_by_teams(games_data_url)
+    match_string = f"{team1_name} (FIFA-Weltranglisten-Rang: {team1_rank}) vs {team2_name} (FIFA-Weltranglisten-Rang: {team2_rank})"
+    games_string = get_last_games_string(games)
     tagesschau_news = get_news_tagesschau(team1_name, team2_name)
+    tagesschau_news_string = get_tagesschau_news_string(tagesschau_news)
     bing_news = get_bing_news(team1_name, team2_name)
-    print(bing_news)
+    bing_news_string = get_bing_news_string(bing_news)
+
+    print(
+        prompt.format(
+            match_string, games_string, tagesschau_news_string, bing_news_string
+        )
+    )
