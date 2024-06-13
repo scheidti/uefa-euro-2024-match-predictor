@@ -31,7 +31,7 @@ def get_ranking():
         rankings = []
         chrome = pw.chromium.launch(headless=True)
 
-        for i in range(1, 3):
+        for i in range(1, 6):
             page_url = (
                 f"https://www.fussballdaten.de/fifa-weltrangliste/?page={i}&per-page=30"
             )
@@ -78,17 +78,26 @@ def get_games_by_teams(games_data_url):
 
                 if result is None:
                     continue
- 
+
                 team1 = game.select_one("a:nth-child(1)").text
                 team2 = game.select_one("a:nth-child(3)").text
                 result_text = game.select_one(".ergebnis span").text
+                result_list = result_text.split(":")
+                date_text = game.select_one(".fcgrey").text
                 games_result.append(
-                    {"team1": team1, "team2": team2, "result": result_text}
+                    {
+                        "team1": team1,
+                        "team2": team2,
+                        "result": result_text,
+                        "date": date_text,
+                        "goals_team1": result_list[0],
+                        "goals_team2": result_list[1],
+                    }
                 )
         except Exception as e:
             print(e)
             return None
-        
+
         return games_result
 
 
@@ -101,7 +110,7 @@ if len(matches) > 0:
     team2_id = match["team2"]["teamId"]
     team1_name = match["team1"]["teamName"]
     team2_name = match["team2"]["teamName"]
- 
+
     # maybe games_stats_url is not needed, games_data_url is enough for now
     games_stats_url = f"https://api.openligadb.de/getmatchdata/{team1_id}/{team2_id}"
     games_data_url = f"https://www.fussballdaten.de/vereine/{translate_umlauts(team1_name)}/{translate_umlauts(team2_name)}/spiele/"
