@@ -101,6 +101,49 @@ def get_games_by_teams(games_data_url):
         return games_result
 
 
+def get_news_tagesschau(team1, team2):
+    """Scrapes the news of the teams from Tagesschau."""
+    news_result = []
+
+    tagesschau_url = "https://www.tagesschau.de/api2/news/?ressort=sport"
+    tagesschau_response = requests.get(tagesschau_url)
+    tagesschau_json = tagesschau_response.json()
+
+    news_urls = []
+    news_titles = []
+
+    for news in tagesschau_json["news"]:
+        tag_contains_em = (
+            len([tag for tag in news["tags"] if tag["tag"] == "EM 2024"]) > 0
+        )
+        title_contains_team1 = team1.lower() in news["title"].lower()
+        title_contains_team2 = team2.lower() in news["title"].lower()
+        if tag_contains_em and (title_contains_team1 or title_contains_team2):
+            news_urls.append(news["detailsweb"])
+            news_titles.append(news["title"])
+
+    with sync_playwright() as pw:
+        chrome = pw.chromium.launch(headless=True)
+
+        for news_url in news_urls:
+            page = chrome.new_page()
+            response = page.goto(news_url)
+
+            if response.status != 200:
+                continue
+
+            try:
+                page.wait_for_selector("div[id=content]")
+                soup = BeautifulSoup(page.content(), "html.parser")
+                news_text = soup.select(".textabsatz")
+                news_text = " ".join([text.text for text in news_text])
+                news_result.append({"url": news_url, "text": news_text, "title": news_titles.pop(0)})
+            except Exception as e:
+                print(e)
+
+    return news_result
+
+
 matches = get_matches()
 matches = [match for match in matches if not match["matchIsFinished"]]
 
@@ -110,17 +153,8 @@ if len(matches) > 0:
     team2_id = match["team2"]["teamId"]
     team1_name = match["team1"]["teamName"]
     team2_name = match["team2"]["teamName"]
-
-    # maybe games_stats_url is not needed, games_data_url is enough for now
-    games_stats_url = f"https://api.openligadb.de/getmatchdata/{team1_id}/{team2_id}"
     games_data_url = f"https://www.fussballdaten.de/vereine/{translate_umlauts(team1_name)}/{translate_umlauts(team2_name)}/spiele/"
 
-    # TODO: Search for news about the teams
-
-    print(f"{team1_name} vs. {team2_name}")
-    print(games_data_url)
     rankings = get_ranking()
-    print(rankings)
-    # latest game is the first one, can be None on error
     games = get_games_by_teams(games_data_url)
-    print(games)
+    tagesschau_news = get_news_tagesschau(team1_name, team2_name)
