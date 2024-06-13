@@ -3,6 +3,7 @@ import os
 from dotenv import load_dotenv
 from playwright.sync_api import sync_playwright
 from bs4 import BeautifulSoup
+from openai import OpenAI
 
 load_dotenv()
 
@@ -208,6 +209,18 @@ def get_bing_news_string(news):
     return news_string
 
 
+def get_game_prediction(prompt):
+    api_key = os.environ["OPEN_AI_KEY"]
+    client = OpenAI(api_key=api_key)
+    completion = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": prompt},
+        ],
+    )
+    print(completion.choices[0].message)
+
+
 matches = get_matches()
 matches = [match for match in matches if not match["matchIsFinished"]]
 rankings = get_ranking()
@@ -256,7 +269,7 @@ if len(matches) > 0:
     bing_news = get_bing_news(team1_name, team2_name)
     bing_news_string = get_bing_news_string(bing_news)
 
-    print(
+    get_game_prediction(
         prompt.format(
             match_string, games_string, tagesschau_news_string, bing_news_string
         )
