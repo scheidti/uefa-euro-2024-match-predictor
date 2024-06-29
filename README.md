@@ -31,6 +31,7 @@ pip install -r requirements.txt
 
 ```bash
 playwright install
+playwright install-deps
 ```
 
 4. Set your Bing Search API key and OpenAI API key as environment variables:
