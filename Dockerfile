@@ -12,5 +12,5 @@ RUN /app/.venv/bin/playwright install
 
 RUN /root/.cargo/bin/uv pip install --no-cache -r requirements.txt
 
-COPY app.py .
-CMD [ "python", "app.py" ]
+COPY main.py .
+CMD [ "python", "main.py" ]
