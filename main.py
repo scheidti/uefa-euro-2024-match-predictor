@@ -1,9 +1,11 @@
 import requests
+import typer
 import os
 from dotenv import load_dotenv
 from playwright.sync_api import sync_playwright
 from bs4 import BeautifulSoup
 from openai import OpenAI
+from typing_extensions import Annotated
 
 load_dotenv()
 
@@ -151,7 +153,7 @@ def get_news_tagesschau(team1, team2):
 def get_bing_news(team1, team2):
     """Scrapes the news of the teams from Bing."""
     bing_url = "https://api.bing.microsoft.com/v7.0/search"
-    subscription_key = os.environ["BING_KEY_1"]
+    subscription_key = os.environ["BING_KEY"]
     query = f"{team1} {team2} EM 2024"
     headers = {"Ocp-Apim-Subscription-Key": subscription_key}
     mkt = "de-DE"
@@ -200,6 +202,15 @@ def get_tagesschau_news_string(news):
     return news_string
 
 
+def get_is_draw_possible_string(is_draw_possible):
+    """Gets the string if a draw is possible."""
+    return (
+        ""
+        if is_draw_possible
+        else "Jetzt ist Finalrunde. Unendschieden ist nicht mehr möglich."
+    )
+
+
 def get_bing_news_string(news):
     """Gets the news from Bing as a string."""
     news_string = ""
@@ -219,11 +230,8 @@ def get_game_prediction(prompt):
         ],
     )
     print(completion.choices[0].message)
+    print()
 
-
-matches = get_matches()
-matches = [match for match in matches if not match["matchIsFinished"]]
-rankings = get_ranking()
 
 prompt = """Du bist ein Experte für die Vorhersage der Fussballergebnisse der UEFA Euro 2024.
 Wenn du die Ergebnisse der Spiele korrekt vorhersagst, gewinnst du 500 Euro.
@@ -231,18 +239,20 @@ Du sollst das Ergebnis des folgenden Spiels vorhersagen:
 
 {0}
 
+{1}
+
 Das sind die letzen Ergebnisse der Spiele der beiden Teams:
 
-{1}
+{2}
 
 Folgende News gibt es zu den Teams. Beziehe die News in deine Vorhersage mit ein, falls du die News für relevant hältst:
 
-{2}
+{3}
 
 Hier hast du weitere News-Titel und eine kurze Beschreibung. Klicke auf den Link, um die vollständige News zu lesen.
 Klicke nur auf den Link und lies die News, wenn du die News für relevant hältst:
 
-{3}
+{4}
 
 Gib dein Ergebnis in der folgenden Form aus:
 
@@ -251,26 +261,49 @@ Tore Team 1 : Tore Team 2
 Viel Erfolg! 🍀
 """
 
-if len(matches) > 0:
-    match = matches[0]
-    team1_id = match["team1"]["teamId"]
-    team2_id = match["team2"]["teamId"]
-    team1_name = match["team1"]["teamName"]
-    team2_name = match["team2"]["teamName"]
-    team1_rank = get_ranking_for_team(team1_name, rankings)
-    team2_rank = get_ranking_for_team(team2_name, rankings)
-    games_data_url = f"https://www.fussballdaten.de/vereine/{translate_umlauts(team1_name)}/{translate_umlauts(team2_name)}/spiele/"
 
-    games = get_games_by_teams(games_data_url)
-    match_string = f"{team1_name} (FIFA-Weltranglisten-Rang: {team1_rank}) vs {team2_name} (FIFA-Weltranglisten-Rang: {team2_rank})"
-    games_string = get_last_games_string(games)
-    tagesschau_news = get_news_tagesschau(team1_name, team2_name)
-    tagesschau_news_string = get_tagesschau_news_string(tagesschau_news)
-    bing_news = get_bing_news(team1_name, team2_name)
-    bing_news_string = get_bing_news_string(bing_news)
+def main(
+    count: Annotated[
+        int,
+        typer.Argument(
+            help="How many matches should be predicted (it starts with the next upcoming match)."
+        ),
+    ] = 1,
+):
+    """Predicts the results of the next upcoming UEFA Euro 2024 matches with OpenAI gpt-4o model (it uses a German prompt)."""
+    matches = get_matches()
+    matches = [match for match in matches if not match["matchIsFinished"]]
+    rankings = get_ranking()
 
-    get_game_prediction(
-        prompt.format(
-            match_string, games_string, tagesschau_news_string, bing_news_string
-        )
-    )
+    for i in range(0, count):
+        if i < len(matches):
+            match = matches[i]
+            team1_name = match["team1"]["teamName"]
+            team2_name = match["team2"]["teamName"]
+            team1_rank = get_ranking_for_team(team1_name, rankings)
+            team2_rank = get_ranking_for_team(team2_name, rankings)
+            is_draw_possible = match["group"]["groupOrderID"] <= 3
+            games_data_url = f"https://www.fussballdaten.de/vereine/{translate_umlauts(team1_name)}/{translate_umlauts(team2_name)}/spiele/"
+
+            games = get_games_by_teams(games_data_url)
+            match_string = f"{team1_name} (FIFA-Weltranglisten-Rang: {team1_rank}) vs {team2_name} (FIFA-Weltranglisten-Rang: {team2_rank})"
+            games_string = get_last_games_string(games)
+            tagesschau_news = get_news_tagesschau(team1_name, team2_name)
+            tagesschau_news_string = get_tagesschau_news_string(tagesschau_news)
+            is_draw_possible_string = get_is_draw_possible_string(is_draw_possible)
+            bing_news = get_bing_news(team1_name, team2_name)
+            bing_news_string = get_bing_news_string(bing_news)
+
+            get_game_prediction(
+                prompt.format(
+                    match_string,
+                    is_draw_possible_string,
+                    games_string,
+                    tagesschau_news_string,
+                    bing_news_string,
+                )
+            )
+
+
+if __name__ == "__main__":
+    typer.run(main)
