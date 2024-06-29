@@ -57,6 +57,22 @@ For example, to predict the next 3 matches:
 python main.py 3
 ```
 
+## Running with Docker
+
+To run the script using Docker, you can build a Docker image from the provided `Dockerfile` and then run a container with the necessary environment variables for the Bing Search API key and the OpenAI API key.
+
+1. Build the Docker image:
+
+```bash
+docker build -t uefa-euro-2024-match-predictor .
+```
+
+2. Run the Docker container, replacing `your_bing_api_key` and `your_openai_api_key` with your actual API keys:
+
+```bash
+docker run -e BING_KEY='your_bing_api_key' -e OPEN_AI_KEY='your_openai_api_key' uefa-euro-2024-match-predictor
+```
+
 ## License
 
 This project is open-source and available under the [MIT License](LICENSE).
