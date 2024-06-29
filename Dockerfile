@@ -2,15 +2,10 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-ADD https://astral.sh/uv/install.sh install.sh
-RUN chmod +x install.sh
-RUN install.sh && rm install.sh
-
 COPY requirements.txt .
-RUN /root/.cargo/bin/uv python -m venv .venv
-RUN /app/.venv/bin/playwright install
-
-RUN /root/.cargo/bin/uv pip install --no-cache -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+RUN python -m playwright install 
+RUN python -m playwright install-deps
 
 COPY main.py .
 CMD [ "python", "main.py" ]
