@@ -76,4 +76,3 @@ docker run -e BING_KEY='your_bing_api_key' -e OPEN_AI_KEY='your_openai_api_key' 
 ## License
 
 This project is open-source and available under the [MIT License](LICENSE).
-```
