@@ -109,9 +109,14 @@ def get_news_tagesschau(team1, team2):
     """Scrapes the news of the teams from Tagesschau."""
     news_result = []
 
-    tagesschau_url = "https://www.tagesschau.de/api2/news/?ressort=sport"
-    tagesschau_response = requests.get(tagesschau_url)
-    tagesschau_json = tagesschau_response.json()
+    try:
+        tagesschau_url = "https://www.tagesschau.de/api2/news/?ressort=sport"
+        tagesschau_response = requests.get(tagesschau_url)
+        tagesschau_response.raise_for_status()
+        tagesschau_json = tagesschau_response.json()
+    except Exception as e:
+        print(f"Tagesschau API error: {e}\n")
+        return news_result
 
     news_urls = []
     news_titles = []
