@@ -110,7 +110,7 @@ def get_news_tagesschau(team1, team2):
     news_result = []
 
     try:
-        tagesschau_url = "https://www.tagesschau.de/api2/news/?ressort=sport"
+        tagesschau_url = "https://www.tagesschau.de/api2u/news/?ressort=sport"
         tagesschau_response = requests.get(tagesschau_url)
         tagesschau_response.raise_for_status()
         tagesschau_json = tagesschau_response.json()
