@@ -305,7 +305,7 @@ def main(
             bing_news = get_bing_news(team1_name, team2_name)
             bing_news_string = get_bing_news_string(bing_news)
 
-            formated_prompt = prompt.format(
+            formatted_prompt = prompt.format(
                 match_string,
                 is_draw_possible_string,
                 games_string,
@@ -314,9 +314,9 @@ def main(
             )
 
             if print_promt:
-                print(f"{formated_prompt}\n\n")
+                print(f"{formatted_prompt}\n\n")
 
-            get_game_prediction(formated_prompt)
+            get_game_prediction(formatted_prompt)
 
 
 if __name__ == "__main__":
