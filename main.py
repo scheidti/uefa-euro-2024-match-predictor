@@ -162,7 +162,7 @@ def get_bing_news(team1, team2):
     query = f"{team1} {team2} EM 2024"
     headers = {"Ocp-Apim-Subscription-Key": subscription_key}
     mkt = "de-DE"
-    params = {"q": query, "mkt": mkt, "textFormat": "Raw", "count": 3}
+    params = {"q": query, "mkt": mkt, "textFormat": "Raw", "count": 6}
     response = requests.get(bing_url, headers=headers, params=params)
     json = response.json()
     news_articles = json["news"]["value"]
@@ -274,6 +274,12 @@ def main(
             help="How many matches should be predicted (it starts with the next upcoming match)."
         ),
     ] = 1,
+    print_promt: Annotated[
+        bool,
+        typer.Option(
+            help="If set, the prompt will be printed.",
+        ),
+    ] = False,
 ):
     """Predicts the results of the next upcoming UEFA Euro 2024 matches with OpenAI gpt-4o model (it uses a German prompt)."""
     matches = get_matches()
@@ -299,15 +305,18 @@ def main(
             bing_news = get_bing_news(team1_name, team2_name)
             bing_news_string = get_bing_news_string(bing_news)
 
-            get_game_prediction(
-                prompt.format(
-                    match_string,
-                    is_draw_possible_string,
-                    games_string,
-                    tagesschau_news_string,
-                    bing_news_string,
-                )
+            formated_prompt = prompt.format(
+                match_string,
+                is_draw_possible_string,
+                games_string,
+                tagesschau_news_string,
+                bing_news_string,
             )
+
+            if print_promt:
+                print(f"{formated_prompt}\n\n")
+
+            get_game_prediction(formated_prompt)
 
 
 if __name__ == "__main__":
