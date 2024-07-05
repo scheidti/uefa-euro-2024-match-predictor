@@ -229,7 +229,9 @@ def get_finished_em_matches_string(matches, is_draw_possible):
         results = match["matchResults"]
         result = results[-1]
         goals_team1 = result["pointsTeam1"]
-        matches_string += f"{team1} - {team2}: {goals_team1} : {result['pointsTeam2']}\n"
+        matches_string += (
+            f"{team1} - {team2}: {goals_team1} : {result['pointsTeam2']}\n"
+        )
 
     return matches_string
 
@@ -323,7 +325,9 @@ def main(
             tagesschau_news = get_news_tagesschau(team1_name, team2_name)
             tagesschau_news_string = get_tagesschau_news_string(tagesschau_news)
             is_draw_possible_string = get_is_draw_possible_string(is_draw_possible)
-            finished_em_matches_string = get_finished_em_matches_string(finished_matches, is_draw_possible)
+            finished_em_matches_string = get_finished_em_matches_string(
+                finished_matches, is_draw_possible
+            )
             bing_news = get_bing_news(team1_name, team2_name)
             bing_news_string = get_bing_news_string(bing_news)
 
