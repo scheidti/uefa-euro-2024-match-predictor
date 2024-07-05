@@ -216,6 +216,24 @@ def get_is_draw_possible_string(is_draw_possible):
     )
 
 
+def get_finished_em_matches_string(matches, is_draw_possible):
+    """Gets the matches of the finished EM 2024 round as a string."""
+    if is_draw_possible:
+        return ""
+
+    matches_string = "Das sind alle Ergebnisse der bisherigen EM 2024 Spiele:\n"
+
+    for match in matches:
+        team1 = match["team1"]["teamName"]
+        team2 = match["team2"]["teamName"]
+        results = match["matchResults"]
+        result = results[-1]
+        goals_team1 = result["pointsTeam1"]
+        matches_string += f"{team1} - {team2}: {goals_team1} : {result['pointsTeam2']}\n"
+
+    return matches_string
+
+
 def get_bing_news_string(news):
     """Gets the news from Bing as a string."""
     news_string = ""
@@ -250,14 +268,16 @@ Das sind die letzen Ergebnisse der Spiele der beiden Teams:
 
 {2}
 
+{3}
+
 Folgende News gibt es zu den Teams. Beziehe die News in deine Vorhersage mit ein, falls du die News für relevant hältst:
 
-{3}
+{4}
 
 Hier hast du weitere News-Titel und eine kurze Beschreibung. Klicke auf den Link, um die vollständige News zu lesen.
 Klicke nur auf den Link und lies die News, wenn du die News für relevant hältst:
 
-{4}
+{5}
 
 Gib dein Ergebnis in der folgenden Form aus:
 
@@ -283,6 +303,7 @@ def main(
 ):
     """Predicts the results of the next upcoming UEFA Euro 2024 matches with OpenAI gpt-4o model (it uses a German prompt)."""
     matches = get_matches()
+    finished_matches = [match for match in matches if match["matchIsFinished"]]
     matches = [match for match in matches if not match["matchIsFinished"]]
     rankings = get_ranking()
 
@@ -302,6 +323,7 @@ def main(
             tagesschau_news = get_news_tagesschau(team1_name, team2_name)
             tagesschau_news_string = get_tagesschau_news_string(tagesschau_news)
             is_draw_possible_string = get_is_draw_possible_string(is_draw_possible)
+            finished_em_matches_string = get_finished_em_matches_string(finished_matches, is_draw_possible)
             bing_news = get_bing_news(team1_name, team2_name)
             bing_news_string = get_bing_news_string(bing_news)
 
@@ -309,6 +331,7 @@ def main(
                 match_string,
                 is_draw_possible_string,
                 games_string,
+                finished_em_matches_string,
                 tagesschau_news_string,
                 bing_news_string,
             )
