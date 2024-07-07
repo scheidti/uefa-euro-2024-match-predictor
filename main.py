@@ -260,6 +260,7 @@ def get_game_prediction(prompt):
 
 prompt = """Du bist ein Experte für die Vorhersage der Fussballergebnisse der UEFA Euro 2024.
 Wenn du die Ergebnisse der Spiele korrekt vorhersagst, gewinnst du 500 Euro.
+Gewichte die aktuelle Form der Teams mehr als die FIFA-Weltrangliste.
 Du sollst das Ergebnis des folgenden Spiels vorhersagen:
 
 {0}
@@ -276,8 +277,8 @@ Folgende News gibt es zu den Teams. Beziehe die News in deine Vorhersage mit ein
 
 {4}
 
-Hier hast du weitere News-Titel und eine kurze Beschreibung. Klicke auf den Link, um die vollständige News zu lesen.
-Klicke nur auf den Link und lies die News, wenn du die News für relevant hältst:
+Hier hast du weitere News-Titel und eine kurze Beschreibung.
+Beziehe die Beschreibung in deine Vorhersage mit ein, falls du die News für relevant hältst:
 
 {5}
 
